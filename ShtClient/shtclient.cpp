@@ -99,11 +99,11 @@ void ShtClient::parseServerMessage(const QString &message)
             }
             else if (message=="finish"){
                 inMatch = false;
-                currentMatch->setMatchState(Match::FINISHED);
+                currentMatch.setMatchState(Match::FINISHED);
                 emit qmlAddChatMessage("La partita è finita");
             }
             else if (message=="start"){
-                currentMatch->setMatchState(Match::STARTED);
+                currentMatch.setMatchState(Match::STARTED);
                 emit qmlAddChatMessage("La partita è iniziata!");
             }
         }
@@ -120,10 +120,8 @@ void ShtClient::parseServerMessage(const QString &message)
                 if(sarg2 == "ok"){
                     inMatch = true;
                     currentCards.clear();
-                    delete currentMatch;
-                    currentMatch = new Match;
-                    currentMatch->setUuid(sarg1);
-                    currentMatch->setMatchState(Match::INIT);
+                    currentMatch.setUuid(sarg1);
+                    currentMatch.setMatchState(Match::INIT);
                     emit qmlOpenMatch(uuid);
                 } else {
                     qWarning() << "Join denied";
@@ -228,7 +226,8 @@ void ShtClient::sendLeaveMatch()
         QJsonObject obj;
         obj["request"] = 4; // LEAVE MATCH
         obj["id"] = settings.value("id", 0).toInt(); //not actually used on the server
-        obj["uuid"] = currentMatch->uuid();
+        obj["uuid"] = currentMatch.uuid();
+        currentMatch.setMatchState(Match::FINISHED);
         QJsonDocument doc;
         doc.setObject(obj);
         socket.sendTextMessage(doc.toJson(QJsonDocument::Compact));
@@ -241,7 +240,7 @@ void ShtClient::sendPassCard(const QString &card)
         QJsonObject obj;
         obj["request"] = 5; // PASS CARD
         obj["id"] = settings.value("id", 0).toInt(); //not actually used on the server
-        obj["uuid"] = currentMatch->uuid(); // the match uuid
+        obj["uuid"] = currentMatch.uuid(); // the match uuid
         obj["card"] = card;
         QJsonDocument doc;
         doc.setObject(obj);
@@ -256,7 +255,7 @@ void ShtClient::sendStartMatch()
         QJsonObject obj;
         obj["request"] = 6; // START MATCH
         obj["id"] = settings.value("id", 0).toInt(); //not actually used on the server
-        obj["uuid"] = currentMatch->uuid();
+        obj["uuid"] = currentMatch.uuid();
         QJsonDocument doc;
         doc.setObject(obj);
         socket.sendTextMessage(doc.toJson(QJsonDocument::Compact));

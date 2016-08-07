@@ -58,7 +58,7 @@ private:
     QList<QString> currentCards;
 
     bool inMatch = false;
-    Match * currentMatch;
+    Match currentMatch;
 
     QQmlContext* ctx;
     QSettings settings;

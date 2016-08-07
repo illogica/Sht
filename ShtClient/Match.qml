@@ -15,9 +15,8 @@ Pane {
     }
 
     function appendChat(txt){
-        chatText.text = chatText.text + txt
+        chatText.text = chatText.text + "\n" + txt
     }
-
 
     Label {
         id:labelTitle
