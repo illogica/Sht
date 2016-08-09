@@ -52,8 +52,8 @@ public:
     QString avatar() const;
     void setAvatar(const QString &avatar);
 
-    QList<Match *> getPendingMatches() const;
-    void setPendingMatches(const QList<Match *> &pendingMatches);
+    Match *getPendingMatch() const;
+    void setPendingMatch(Match *pendingMatch);
 
 signals:
 
@@ -69,7 +69,7 @@ private:
     int m_state;
     QString m_avatar;
 
-    QList<Match*> m_pendingMatches; //matches the user is playing
+    Match* m_pendingMatch; //matches the user is playing
 
     QWebSocket* m_socket;
     QList<Card *> m_matchCards; // match uuid and cards

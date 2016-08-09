@@ -23,10 +23,12 @@ public slots:
     void onTextMessage(QString msg);
     void onSocketDisconnected();
     void onQuit();
+    void onMatchFinished(const QString& uuid);
 
 private:
 
     Match* findMatch(QString uuid);
+    User* findLoggedUser(int id);
 
     QWebSocketServer *socketServer;
     DbManager *dbManager;

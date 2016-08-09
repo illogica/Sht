@@ -131,6 +131,11 @@ void ShtClient::parseServerMessage(const QString &message)
                 currentCards.append(sarg1);
                 emit qmlHaveCard(sarg1);
             }
+            else if(message == "start_game"){
+                if(sarg1 == "denied"){
+                    emit qmlAddChatMessage("Non puoi far iniziare la partita");
+                }
+            }
         }
     } break;
 

@@ -15,11 +15,12 @@ class Match : public QObject
     Q_OBJECT
 public:
     explicit Match(QObject *parent = 0);
+    ~Match();
     bool init(User* owner);
     bool start();
     bool pause();
     bool resume();
-    bool finish();
+    void finish();
     void addPlayer(User* user);
     void leavePlayer(User* user);
     void matchMessage(QString sender, QString message, QString arg1, QString arg2);
@@ -42,6 +43,7 @@ public:
     void setOwner(User *owner);
 
 signals:
+    void finished(const QString& uuid);
 
 public slots:
 

@@ -4,6 +4,7 @@
 
 User::User(QObject *parent) : QObject(parent)
 {
+    m_pendingMatch = NULL;
 }
 
 QJsonObject User::getJsonObject()
@@ -17,16 +18,6 @@ QJsonObject User::getJsonObject()
     obj["id"] = m_id;
     obj["avatar"] = m_avatar;
     return obj;
-}
-
-void User::addPendingMatch(Match *m)
-{
-    m_pendingMatches.append(m);
-}
-
-void User::removePendingMatch(Match *m)
-{
-    m_pendingMatches.removeOne(m);
 }
 
 int User::id() const
@@ -119,14 +110,14 @@ void User::setAvatar(const QString &avatar)
     m_avatar = avatar;
 }
 
-QList<Match *> User::getPendingMatches() const
+Match *User::getPendingMatch() const
 {
-    return m_pendingMatches;
+    return m_pendingMatch;
 }
 
-void User::setPendingMatches(const QList<Match *> &pendingMatches)
+void User::setPendingMatch(Match *pendingMatch)
 {
-    m_pendingMatches = pendingMatches;
+    m_pendingMatch = pendingMatch;
 }
 
 void User::sendMessage(QString sender, QString message, QString arg1, QString arg2)

@@ -78,12 +78,11 @@ void ShtServer::onTextMessage(QString msg)
 
     case 1:     //GET MATCHES
     {
-        int id = docObj["id"].toInt();
-        User* u = dbManager->findUserById(id);
+        User *u = usersBySocket.value(socket);
         if(!u){
-           qWarning() << "WARNING: getMatches from unknown user";
+            qWarning() << "WARNING: getMatches from unknown user";
+            break;
         }
-        delete(u);
 
         QJsonArray matchesList;
         for(Match* m: matches){
@@ -91,16 +90,13 @@ void ShtServer::onTextMessage(QString msg)
             matchesList.append(matchObj);
         }
 
-        u = usersBySocket.value(socket);
-
         QJsonObject obj;
         obj["request"] = 1;
         obj["matchesList"] = matchesList;
         QJsonDocument doc;
         doc.setObject(obj);
         QByteArray msg = doc.toJson(QJsonDocument::Compact);
-        u->socket()->sendTextMessage(msg);
-        //socket->sendTextMessage(msg);
+        socket->sendTextMessage(msg);
     }break;
     case 2:     //CREATE MATCH
     {
@@ -110,14 +106,16 @@ void ShtServer::onTextMessage(QString msg)
             break;
         }
 
-        if(u->getPendingMatches().size()>0){
+        if(u->getPendingMatch() != NULL){
             qWarning() << "SKIPPING: user already has a match pending";
             break;
         }
+
         Match *m = new Match(this);
         m->init(u);
         m->addPlayer(u);
         matches.append(m);
+        u->setPendingMatch(m);
 
         QJsonObject obj;
         obj["request"] = 2;
@@ -125,8 +123,8 @@ void ShtServer::onTextMessage(QString msg)
         QJsonDocument doc;
         doc.setObject(obj);
         QByteArray msg = doc.toJson(QJsonDocument::Compact);
-        //socket->sendTextMessage(msg);
-        u->socket()->sendTextMessage(msg);
+        socket->sendTextMessage(msg);
+        connect(m, &Match::finished, this, &ShtServer::onMatchFinished);
     }break;
     case 3:     //JOIN MATCH
     {
@@ -139,8 +137,10 @@ void ShtServer::onTextMessage(QString msg)
         Match* m = findMatch(docObj["uuid"].toString());
         if(!m){
             qWarning() << "ERROR: match not found";
+            break;
         }
         m->addPlayer(u);
+        u->setPendingMatch(m);
     }break;
     case 4:     //LEAVE MATCH
     {
@@ -153,6 +153,7 @@ void ShtServer::onTextMessage(QString msg)
         Match* m = findMatch(docObj["uuid"].toString());
         if(!m){
             qWarning() << "ERROR: match not found";
+            break;
         }
         m->leavePlayer(u);
     }break;
@@ -186,8 +187,10 @@ void ShtServer::onTextMessage(QString msg)
         }
 
         //Only match creator can start the match
-        if(m->getOwner()->name() == u->name()){
+        if(m->state()==Match::INIT && m->getOwner() == u){
             m->start();
+        } else {
+            u->sendMessage("match_server", "start_game", "denied", "");
         }
 
     }break;
@@ -202,13 +205,13 @@ void ShtServer::onSocketDisconnected()
 {
     QWebSocket *socket = qobject_cast<QWebSocket *>(sender());
     User* u = usersBySocket.value(socket);
-    for(Match* m: u->getPendingMatches()){
-        m->leavePlayer(u);
+    if(u->getPendingMatch() != NULL){
+        u->getPendingMatch()->leavePlayer(u);
     }
     u->setState(User::OFFLINE);
     dbManager->saveUser(u);
-    delete(u);
     usersBySocket.remove(socket);
+    u->deleteLater();
     qWarning() << "onSocketDisconnected";
 }
 
@@ -217,13 +220,31 @@ void ShtServer::onQuit()
     qDebug() << "onQuit";
 }
 
+void ShtServer::onMatchFinished(const QString &uuid)
+{
+    qWarning() << "OnMatchFinished, uuid: " << uuid;
+    Match *m = findMatch(uuid);
+    matches.removeOne(m);
+    m->deleteLater();
+}
+
 Match *ShtServer::findMatch(QString uuid)
 {
     for(Match *m: matches){
         if(m->uuid == uuid)
             return m;
     }
-    return nullptr;
+    return NULL;
+}
+
+User *ShtServer::findLoggedUser(int id)
+{
+    for(User* u : usersBySocket.values()){
+        if(u->id() == id){
+            return u;
+        }
+    }
+    return NULL;
 }
 
 

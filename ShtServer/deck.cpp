@@ -16,7 +16,8 @@ Deck::Deck(QObject *parent) : QObject(parent)
 Deck::Deck(int players)
 {
     qsrand(QTime::currentTime().msec());
-    for(int i=0; i<4; i++){
+    int limit = players < 4 ? players : 4;
+    for(int i=0; i<limit; i++){
         for(int j=1; j<=players; j++){
             Card *c = new Card(this, i, j);
             m_deck.append(c);

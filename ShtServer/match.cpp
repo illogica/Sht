@@ -3,9 +3,18 @@
 
 Match::Match(QObject *parent) : QObject(parent)
 {
+    m_owner = NULL;
     uuid = QUuid::createUuid().toString();
-    m_shitDeck = new Deck(this);
-    m_playersDeck = new Deck(this);
+    m_shitDeck = NULL;
+    //m_playersDeck = new Deck(this);
+    m_playersDeck = NULL;
+}
+
+Match::~Match()
+{
+    m_players.clear();
+    delete m_shitDeck;
+    delete m_playersDeck;
 }
 
 bool Match::init(User* owner)
@@ -43,11 +52,15 @@ bool Match::resume()
     return true;
 }
 
-bool Match::finish()
+void Match::finish()
 {
     m_state = FINISHED;
     matchMessage("match_server", "finish", uuid, "");
-    return true;
+    for(User *u: m_players){
+        u->setPendingMatch(NULL);
+        m_players.removeOne(u);
+    }
+    emit finished(uuid);
 }
 
 void Match::addPlayer(User *user)
@@ -56,7 +69,6 @@ void Match::addPlayer(User *user)
         matchMessage("match_server", "joined", uuid, user->name());
         playerMessage("match_server", user, "join", uuid, "ok");
         m_players.append(user);
-        user->addPendingMatch(this);
         user->clearCards();
         sendMatchInitialDataToPlayers();
     } else {
@@ -67,7 +79,11 @@ void Match::addPlayer(User *user)
 void Match::leavePlayer(User *user)
 {
     m_players.removeOne(user);
-    user->removePendingMatch(this);
+    user->setPendingMatch(NULL);
+    if(m_players.size() == 0){
+        emit finished(uuid);
+        return;
+    }
 
     if(m_state==Match::INIT){
         sendMatchInitialDataToPlayers();
@@ -77,6 +93,7 @@ void Match::leavePlayer(User *user)
     if(m_state==Match::STARTED){
         //a user left, finish the game
         finish();
+        return;
     }
 }
 
