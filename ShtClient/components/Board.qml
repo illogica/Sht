@@ -40,6 +40,13 @@ Item {
         obj.z=1
     }
 
+    function reset(){
+        for(var i=0; i<cards.length; i++){
+            console.log("called delete on card " +i)
+            cards[i].destroy();
+        }
+    }
+
     function randomX(){
         var min = cardWidth
         var max = root.width - cardWidth
@@ -48,7 +55,7 @@ Item {
 
     function randomY(){
         var min = cardHeight
-        var max = root.height - cardHeight
+        var max = (root.height * 0.75) - cardHeight
         return Math.random() * (max - min) + min;
     }
 

@@ -140,7 +140,8 @@ void User::sendMessage(QString sender, QString message, QString arg1, QString ar
 
 void User::clearCards()
 {
-    while(!m_matchCards.isEmpty()) delete m_matchCards.takeFirst();
+    //while(!m_matchCards.isEmpty()) delete m_matchCards.takeFirst();
+    m_matchCards.clear();
 }
 
 void User::pushCard(Card *c)

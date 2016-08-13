@@ -30,7 +30,7 @@ Item {
         id: overlay
         anchors.fill: image
         source: image
-        color: "#00000000"
+        color: "#10101010"
     }
 }
 

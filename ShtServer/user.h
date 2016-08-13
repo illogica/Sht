@@ -72,7 +72,7 @@ private:
     Match* m_pendingMatch; //matches the user is playing
 
     QWebSocket* m_socket;
-    QList<Card *> m_matchCards; // match uuid and cards
+    QList<Card *> m_matchCards; // match cards
 
 };
 

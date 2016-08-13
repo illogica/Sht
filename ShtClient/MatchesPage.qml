@@ -8,8 +8,6 @@ Pane {
     height: 640
     width: 480
 
-    Component.onCompleted: Sht.sendGetMatches()
-
     Label {
         id:labelTitle
         width: parent.width
@@ -35,6 +33,28 @@ Pane {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
+    }
+
+    Button {
+        id: buttonRefresh
+        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 20 }
+        text: "Aggiorna lista"
+        //width: itemWidth
+        onClicked:{
+            Sht.sendGetMatches();
+        }
+    }
+
+    CloseButton{
+        id: closeButton
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 30
+        width: 30
+        onClicked:{
+            Sht.sendLeaveMatch();
+            stack.pop();
+        }
     }
 }
 

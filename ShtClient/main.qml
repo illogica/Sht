@@ -124,15 +124,17 @@ ApplicationWindow {
                     if (listView.currentIndex != index) {
                         listView.currentIndex = index
                         titleLabel.text = model.title
-                        stack.push(model.source)
-                        console.log("stack.push " + model.source);
+                        //stack.push(model.source)
+                        stack.loadById(menuId)
+                        console.log("stack.push " + model.menuId);
                     }
                     drawer.close()
                 }
             }
 
             model: ListModel {
-                ListElement { title: qsTr("Matches"); source: "qrc:/MatchesPage.qml" }
+                //ListElement { title: qsTr("Matches"); source: "qrc:/MatchesPage.qml" }
+                ListElement { title: qsTr("Matches");  menuId: 0}
                 ListElement { title: qsTr("Players"); source: "qrc:/pages/ButtonPage.qml" }
                 ListElement { title: qsTr("Your Stats"); source: "qrc:/pages/CheckBoxPage.qml" }
             }
@@ -144,6 +146,17 @@ ApplicationWindow {
     StackView {
         id: stack
         anchors.fill: parent
+
+        function loadById(id){
+            switch(id){
+            case 0:
+                Sht.sendGetMatches()
+                stack.push(matchesPage);
+                break;
+            default:
+                console.log("Work better");
+            }
+        }
 
         initialItem: Pane {
             id: pane
@@ -311,7 +324,7 @@ ApplicationWindow {
                                      })
         }
         onCountChanged: {
-            if(matchesModel.count() === 0)
+            if(count === 0)
                 console.log("Empty matches list");
         }
 
@@ -327,7 +340,6 @@ ApplicationWindow {
 
         function addText(message){
             chatModel.append({"message": message});
-            console.log("Appended chat message: " + message);
         }
 
         function reset(){
@@ -336,8 +348,31 @@ ApplicationWindow {
         }
     }
 
+    ListModel{
+        id: playersModel
+        objectName: "playersModel"
+
+        function addPlayer(name, kilos, avatar){
+            playersModel.append({
+                                    "plrName": name,
+                                    "plrKilos": kilos,
+                                    "plrAvatar" : avatar
+                                });
+        }
+
+        function reset(){
+            clear()
+            console.log("cleared players model");
+        }
+    }
+
     Match{
-        id: matchPage
+        id: match
+        visible: false
+    }
+
+    MatchesPage{
+        id: matchesPage
         visible: false
     }
 
@@ -351,18 +386,29 @@ ApplicationWindow {
         }
         onQmlOpenMatch: {
             //stack.push("qrc:/Match.qml")
-            stack.push(matchPage)
+            stack.push(match)
         }
         onQmlAddChatMessage: {
             chatModel.addText(message);
-            matchPage.appendChat(message)
+            //match.appendChat(message)
         }
         onQmlChatReset: {
             chatModel.reset();
         }
         onQmlHaveCard: {
-            console.log("Qml - have card" + card);
-            matchPage.createCard(card)
+            match.createCard(card)
+        }
+        onQmlAddPlayerToModel: {
+            playersModel.addPlayer(name, kilos, avatar);
+        }
+        onQmlPlayersModelReset: {
+            playersModel.reset()
+        }
+        onQmlCardsReset: {
+            match.reset()
+        }
+        onQmlMatchStart:{
+            match.state = "started"
         }
     }
 }

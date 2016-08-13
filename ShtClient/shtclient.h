@@ -17,6 +17,7 @@ class ShtClient : public QObject
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
 public:
     explicit ShtClient(QObject *parent = 0, QQmlContext *c = 0);
+    void endMatch();
 
     QString uuid; //temporary!
 
@@ -28,7 +29,11 @@ signals:
     void qmlOpenMatch(const QString &uuid);
     void qmlAddChatMessage(const QString &message);
     void qmlChatReset();
+    void qmlCardsReset();
     void qmlHaveCard(const QString &card);
+    void qmlAddPlayerToModel(QString name, int kilos, QString avatar);
+    void qmlPlayersModelReset();
+    void qmlMatchStart();
 
 public slots:
     void onConnected();
@@ -55,8 +60,8 @@ private:
     void fromJsonObject(QJsonObject obj, Match* m);
 
     QList<QObject*> m_matches;
-    QList<QString> currentCards;
 
+    QList<QString> currentCards;
     bool inMatch = false;
     Match currentMatch;
 

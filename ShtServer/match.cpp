@@ -86,6 +86,7 @@ void Match::leavePlayer(User *user)
     }
 
     if(m_state==Match::INIT){
+        matchMessage("match_server", "left", uuid, user->name());
         sendMatchInitialDataToPlayers();
         return;
     }

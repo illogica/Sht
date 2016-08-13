@@ -12,6 +12,13 @@ ShtClient::ShtClient(QObject *parent, QQmlContext *ctx) : QObject(parent)
     connect(&socket, &QWebSocket::textMessageReceived, this, &ShtClient::parseServerMessage);
 }
 
+void ShtClient::endMatch()
+{
+    emit qmlCardsReset();
+    currentCards.clear();
+    inMatch = false;
+}
+
 void ShtClient::establish(){
     socket.open(QUrl(QStringLiteral("ws://192.168.1.232:8081")));
 }
@@ -64,6 +71,7 @@ void ShtClient::parseServerMessage(const QString &message)
     } break;
     case 1: //GET MATCHES
     {
+        emit qmlResetMatches();
         QJsonArray matches = docObj["matchesList"].toArray();
 
         //Clear the list we already have
@@ -86,24 +94,40 @@ void ShtClient::parseServerMessage(const QString &message)
         QString sender = docObj["sender"].toString();
         QString message = docObj["message"].toString();
         QString sarg1 = docObj["sarg1"].toString();
-        QString sarg2 = docObj["sarg2"].toString();
 
         if(sender == "match_server"){
             if(message=="joined"){
-                QString s("<b>" + sarg2 + " si è aggiunto");
+                QString sarg2 = docObj["sarg2"].toString();
+                QString s("<b>" + sarg2 + "</b> si è aggiunto");
                 emit qmlAddChatMessage(s);
             }
+            else if (message=="update_match"){
+                emit qmlPlayersModelReset();
+                QJsonDocument playersDoc = QJsonDocument::fromJson(docObj["sarg2"].toString().toUtf8());
+                QJsonObject playersObject = playersDoc.object();
+                QJsonArray players = playersObject["players"].toArray();
+                QJsonArray::iterator it;
+                for(it = players.begin(); it!=players.end(); it++){
+                    QJsonObject obj = (*it).toObject();
+                    QString name = obj["name"].toString();
+                    int kilos = 0;
+                    QString avatar = obj["avatar"].toString();
+                    emit qmlAddPlayerToModel(name, kilos, avatar);
+                }
+            }
             else if (message=="left"){
-                QString s("<b>" + sarg2 + " si è disconnesso");
+                QString sarg2 = docObj["sarg2"].toString();
+                QString s("<b>" + sarg2 + "</b> si è disconnesso");
                 emit qmlAddChatMessage(s);
             }
             else if (message=="finish"){
-                inMatch = false;
+                endMatch();
                 currentMatch.setMatchState(Match::FINISHED);
                 emit qmlAddChatMessage("La partita è finita");
             }
             else if (message=="start"){
                 currentMatch.setMatchState(Match::STARTED);
+                emit qmlMatchStart();
                 emit qmlAddChatMessage("La partita è iniziata!");
             }
         }
@@ -227,6 +251,8 @@ void ShtClient::sendJoinMatch(const QString &uuid)
 
 void ShtClient::sendLeaveMatch()
 {
+    endMatch();
+
     if(m_connected){
         QJsonObject obj;
         obj["request"] = 4; // LEAVE MATCH

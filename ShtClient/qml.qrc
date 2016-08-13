@@ -10,5 +10,6 @@
         <file>MatchesPage.qml</file>
         <file>components/CloseButton.qml</file>
         <file>Match.qml</file>
+        <file>components/PlayerCell.qml</file>
     </qresource>
 </RCC>
